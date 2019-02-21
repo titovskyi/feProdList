@@ -16,63 +16,78 @@ import {
   changeProdState,
   deleteProductFromList
 } from "../../store/actions/index";
-import { Dropdown } from 'react-native-material-dropdown';
+import { Dropdown } from "react-native-material-dropdown";
 import Icon from "react-native-vector-icons/Ionicons";
+import departments from '../../assets/departments';
 import { Navigation } from "react-native-navigation";
 
 class SelectedList extends Component {
   constructor(props) {
     super(props);
 
-    this.dropItems = [
-      { value: 'Автотовары' },
-      { value: 'Аксессуары' },
-      { value: 'Алкоголь' },
-      { value: 'Аптека' },
-      { value: 'Бакалея' },
-      { value: 'Гигиена' },
-      { value: 'Готовые блюда' },
-      { value: 'Дети' },
-      { value: 'Дом' },
-      { value: 'Другое' },
-      { value: 'Заморозка' },
-      { value: 'Канцтовары' },
-      { value: 'Консервы' },
-      { value: 'Молочные продукты' },
-      { value: 'Морепродукты' },
-      { value: 'Мясо' },
-      { value: 'Напитки' },
-      { value: 'Овощи' },
-      { value: 'Питомцы' },
-      { value: 'Сладости' },
-      { value: 'Снеки' },
-      { value: 'Специи' },
-      { value: 'Спорт' },
-      { value: 'Строительный' },
-      { value: 'Фрукты' },
-      { value: 'Хлеб' },
-      { value: 'Электроника' }
-    ];
-
     this.state = {
       prodName: "",
       department: "",
+      products: [],
       sections: []
     };
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.products !== prevState.products) {
+      let section = [];
+      let bought = nextProps.products.filter(
+        item => item.listProduct.state === false
+      );
+      let needToBuy = nextProps.products.filter(
+        item => item.listProduct.state === true
+      );
+
+      needToBuy.forEach(prod => {
+        let sectionBought = section.find(
+          item => item.title === prod.department
+        );
+        if (!sectionBought) {
+          section.push({
+            title: prod.department,
+            data: [prod]
+          });
+        } else {
+          section.map(item => {
+            if (item.title === prod.department) {
+              item.data.push(prod);
+            }
+          });
+        }
+      });
+
+      bought.forEach(prod => {
+        let sectionBought = section.find(item => item.title === "Куплено");
+        if (!sectionBought) {
+          section.push({
+            title: "Куплено",
+            data: [prod]
+          });
+        } else {
+          section.map(item => {
+            if (item.title === "Куплено") {
+              item.data.push(prod);
+            }
+          });
+        }
+      });
+
+      return {
+        sections: section
+      };
+    }
   }
 
   componentDidMount() {
     Navigation.events().bindComponent(this);
     this.props.onGetList(this.props.selectedList);
-    console.log('mounted');
+    console.log(departments);
   }
-
-  inputChangeHandler = event => {
-    console.log(event);
-    // this.setState({
-    //   prodName: event
-    // });
-  };
 
   navigationButtonPressed = ({ buttonId }) => {
     if (buttonId === "toggleDrawer") {
@@ -88,9 +103,10 @@ class SelectedList extends Component {
 
   addProduct = () => {
     if (this.state.prodName) {
-      const productName = this.props.allProducts.find(product => {
-        product.name === this.state.prodName;
-      }) || { productName: this.state.prodName };
+      const productName = {
+        productName: this.state.prodName,
+        department: this.state.department || "Другое"
+      };
       const listProduct = { ...this.props.selectedList, ...productName };
       this.props.onAddProduct(listProduct);
       this.setState({
@@ -106,74 +122,31 @@ class SelectedList extends Component {
     console.log(prodId);
   };
 
-  dividedSections = (listProd) => {
-    let section = [];
-    let bought = listProd.filter(item => item.listProduct.state === false);
-    let needToBuy = listProd.filter(item => item.listProduct.state === true);
-
-    bought.forEach((prod) => {
-      let sectionBought = section.find(item => item.title === 'Купленно');
-      if(!sectionBought) {
-        section.push({
-          title: 'Купленно',
-          data: [prod.name]
-        })
-      } else {
-        section.map((item) => {
-          if(item.title === 'Купленно') {
-            item.data.push(prod.name);
-          }
-        })
-      }
-    })
-
-    needToBuy.forEach((prod) => {
-      let sectionBought = section.find(item => item.title === 'Покупки');
-      if(!sectionBought) {
-        section.push({
-          title: 'Покупки',
-          data: [prod.name]
-        })
-      } else {
-        section.map((item) => {
-          if(item.title === 'Покупки') {
-            item.data.push(prod.name);
-          }
-        })
-      }
-    })
-
-    this.setState({
-      sections: section
-    })
-    
-    console.log(section, 'bought');
-  }
-
   changeProdState = prod => {
     prod.listProduct.state = !prod.listProduct.state;
     this.props.onChangeState(prod);
-    this.dividedSections(this.props.products);
-    console.log(this.state);
   };
 
   render() {
     const infoBlock =
       this.state.prodName.length >= 3 ? (
         <View style={styles.infoInputContainer}>
-          <Dropdown 
-            label='Категория'
-            data={this.dropItems}
-            onChangeText={(department) => this.setState({department})}
+          <Dropdown
+            placeholder="Категория"
+            data={departments}
+            onChangeText={department => this.setState({ department })}
             fontSize={20}
             itemCount={6}
+            style={styles.dropdown}
           />
           <TextInput
             placeholder="Количество"
             style={[styles.textInput, { width: "100%" }]}
-            keyboardType='numeric'
+            keyboardType="numeric"
             name="quantity"
-            onChangeText={(quantity) => this.setState({quantity: quantity.replace(/[^0-9]/g, '')})}
+            onChangeText={quantity =>
+              this.setState({ quantity: quantity.replace(/[^0-9]/g, "") })
+            }
             value={this.state.quantity}
             maxLength={3}
           />
@@ -186,7 +159,7 @@ class SelectedList extends Component {
             style={styles.textInput}
             placeholder="Название продукта"
             name="prodName"
-            onChangeText={(prodName) => this.setState({prodName})}
+            onChangeText={prodName => this.setState({ prodName })}
             value={this.state.prodName}
           />
           <TouchableOpacity onPress={this.addProduct}>
@@ -204,20 +177,11 @@ class SelectedList extends Component {
         </View>
         {infoBlock}
         <SectionList
-          renderItem={({item, index, section}) => <Text key={index}>{item}</Text>}
-          renderSectionHeader={({section: {title}}) => (
-            <Text style={{fontWeight: 'bold'}}>{title}</Text>
-          )}
-          sections={this.state.sections}
-          keyExtractor={(item, index) => item + index}
-        />
-        <FlatList
-          data={this.props.products}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
+          renderItem={({ item, index, section }) => (
             <TouchableOpacity onPress={() => this.changeProdState(item)}>
               <View style={styles.productItem}>
                 <Text
+                  key={index}
                   style={[
                     styles.productItemText,
                     item.listProduct.state
@@ -238,6 +202,11 @@ class SelectedList extends Component {
               </View>
             </TouchableOpacity>
           )}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={[styles.productItemText, { fontWeight: "bold" }]}>{title}</Text>
+          )}
+          sections={this.state.sections}
+          keyExtractor={(item, index) => item + index}
         />
       </View>
     );
@@ -245,9 +214,12 @@ class SelectedList extends Component {
 }
 
 const styles = StyleSheet.create({
+  dropdown: {
+    paddingLeft: 15
+  },
   main: {
     flex: 1,
-    backgroundColor: "#ffffff"
+    backgroundColor: "rgba(255, 237, 45, .5)"
   },
   inputNameContainer: {
     flexDirection: "row",
@@ -267,7 +239,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
     fontSize: 20,
     paddingLeft: 15,
-    color: '#695A46'
+    color: "#695A46"
   },
   productItem: {
     width: "90%",
@@ -282,7 +254,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1
   },
   productItemText: {
-    color: '#695A46',
+    color: "#695A46",
     fontSize: 20,
     paddingLeft: 10
   },

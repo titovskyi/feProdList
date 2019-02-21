@@ -13,15 +13,51 @@ import {
 
 import background from "../../assets/sideDrawerImage.jpg";
 import { goToMainApp } from "../navigation";
-
+import {connect} from 'react-redux';
+import { authUser } from '../../store/actions/index';
+import validation from "../../utility/validation";
 import Icon from "react-native-vector-icons/Ionicons";
 
-export default class AuthScreen extends Component {
+class AuthScreen extends Component {
   state = {
-    signUpPage: false
+    signUpPage: false,
+    controls: {
+      login: {
+        value: "",
+        valid: false,
+        validationRules: {
+          minLength: 3
+        },
+        touched: false
+      },
+      email: {
+        value: "",
+        valid: false,
+        validationRules: {
+          isEmail: true
+        },
+        touched: false
+      },
+      password: {
+        value: "",
+        valid: false,
+        validationRules: {
+          minLength: 6
+        },
+        touched: false
+      },
+      passwordConfirm: {
+        value: "",
+        valid: false,
+        validationRules: {
+          equalTo: "password"
+        },
+        touched: false
+      }
+    }
   };
 
-  sighUpHandler = () => {
+  sighUpLoginHandler = () => {
     this.setState({
       signUpPage: !this.state.signUpPage
     });
@@ -31,9 +67,66 @@ export default class AuthScreen extends Component {
     goToMainApp();
   };
 
+  updateInputState = (key, value) => {
+    let connectedValue = {};
+    if (this.state.controls[key].validationRules.equalTo) {
+      const equalControl = this.state.controls[key].validationRules.equalTo;
+      const equalValue = this.state.controls[equalControl].value;
+      connectedValue = {
+        ...connectedValue,
+        equalTo: equalValue
+      };
+    }
+    if (key === "password") {
+      connectedValue = {
+        ...connectedValue,
+        equalTo: value
+      };
+    }
+    this.setState(prevState => {
+      return {
+        controls: {
+          ...prevState.controls,
+          passwordConfirm: {
+            ...prevState.controls.passwordConfirm,
+            valid:
+              key === "password"
+                ? validation(
+                    prevState.controls.passwordConfirm.value,
+                    prevState.controls.passwordConfirm.validationRules,
+                    connectedValue
+                  )
+                : prevState.controls.passwordConfirm.valid
+          },
+          [key]: {
+            ...prevState.controls[key],
+            value: value,
+            valid: validation(
+              value,
+              prevState.controls[key].validationRules,
+              connectedValue
+            ),
+            touched: true
+          }
+        }
+      };
+    });
+  };
+
+  loginHandler = () => {
+    console.log('sss');
+    const authData = {
+      login: this.state.controls.login.value,
+      email: this.state.controls.email.value,
+      password: this.state.controls.password.value
+    };
+    this.props.onLogin(authData);
+    console.log(this.props.users, 'users');
+  }
+
   render() {
     return (
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{ flex: 1 }}>
         <ImageBackground source={background} style={styles.background}>
           <View style={styles.authContainer}>
             <View style={{ width: "100%" }}>
@@ -52,33 +145,71 @@ export default class AuthScreen extends Component {
               </TouchableOpacity>
             </View>
             <View style={styles.formContainer}>
+              {this.state.signUpPage ? (
+                <TextInput
+                  placeholder="Ваш логин"
+                  onChangeText={val => this.updateInputState("login", val)}
+                  value={this.state.controls.login.value}
+                  style={[
+                    styles.input,
+                    !this.state.controls.login.valid &&
+                    this.state.controls.login.touched
+                      ? styles.invalid
+                      : null
+                  ]}
+                />
+              ) : null}
               <TextInput
                 placeholder="Ваш электронный адресс"
-                style={styles.input}
+                onChangeText={val => this.updateInputState("email", val)}
+                value={this.state.controls.email.value}
+                style={[
+                  styles.input,
+                  !this.state.controls.email.valid &&
+                  this.state.controls.email.touched
+                    ? styles.invalid
+                    : null
+                ]}
               />
               <TextInput
                 placeholder="Ваш пароль"
-                style={
-                  this.state.signUpPage
-                    ? styles.input
-                    : [styles.input, { marginBottom: 20 }]
-                }
+                style={[
+                  styles.input,
+                  this.state.signUpPage ? null : { marginBottom: 20 },
+                  !this.state.controls.password.valid &&
+                  this.state.controls.password.touched
+                    ? styles.invalid
+                    : null
+                ]}
+                onChangeText={val => this.updateInputState("password", val)}
+                value={this.state.controls.password.value}
               />
               {this.state.signUpPage ? (
                 <TextInput
                   placeholder="Повторите Ваш пароль"
-                  style={[styles.input, { marginBottom: 20 }]}
+                  style={[
+                    styles.input,
+                    { marginBottom: 20 },
+                    !this.state.controls.passwordConfirm.valid &&
+                    this.state.controls.passwordConfirm.touched
+                      ? styles.invalid
+                      : null
+                  ]}
+                  onChangeText={val =>
+                    this.updateInputState("passwordConfirm", val)
+                  }
+                  value={this.state.controls.passwordConfirm.value}
                 />
               ) : null}
               <View style={styles.buttonContainer}>
                 <Button
-                  onPress={() => alert("LogIn")}
+                  onPress={() => this.loginHandler()}
                   title={this.state.signUpPage ? "Создать аккаунт" : "Войти"}
                 />
               </View>
             </View>
             <TouchableOpacity
-              onPress={this.sighUpHandler}
+              onPress={this.sighUpLoginHandler}
               style={styles.registration}
             >
               <Text style={{ color: "#ffffff", fontWeight: "bold" }}>
@@ -128,5 +259,23 @@ const styles = StyleSheet.create({
   },
   registration: {
     marginBottom: 10
+  },
+  invalid: {
+    backgroundColor: "#f9c0c0",
+    borderColor: "red"
   }
 });
+
+const mapStateToProps = state => {
+  return {
+    users: state.users.users
+  };
+};
+
+mapDispatchToProps = dispatch => {
+  return {
+    onLogin: authData => dispatch(authUser(authData))
+  }
+}
+
+export default connect(null, mapDispatchToProps)(AuthScreen);

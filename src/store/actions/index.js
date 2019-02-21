@@ -6,3 +6,5 @@ export {
   changeProdState,
   deleteProductFromList
 } from "./products";
+
+export { authUser } from "./auth";

@@ -6,9 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Platform
+  Platform,
+  ImageBackground
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import background from "../../assets/sideDrawerImage.jpg";
 import { connect } from "react-redux";
 import { getLists, deleteList } from "../../store/actions/index";
 import { Navigation } from "react-native-navigation";
@@ -22,8 +24,6 @@ import {
 } from "react-native-popup-menu";
 
 class PrivateLists extends Component {
-  
-
   constructor(props) {
     super(props);
 
@@ -31,7 +31,7 @@ class PrivateLists extends Component {
   }
 
   componentDidMount() {
-    console.log('mount');
+    console.log("mount");
     this.props.onGetLists();
   }
 
@@ -47,7 +47,7 @@ class PrivateLists extends Component {
     }
   };
 
-  selectList = (selectedList) => {
+  selectList = selectedList => {
     Navigation.push(this.props.componentId, {
       component: {
         name: "SelectedList",
@@ -62,10 +62,10 @@ class PrivateLists extends Component {
           }
         }
       }
-    })
-  }
+    });
+  };
 
-  listNameHandler = (selectedList) => {
+  listNameHandler = selectedList => {
     Navigation.push(this.props.componentId, {
       component: {
         name: "SetListName",
@@ -80,8 +80,8 @@ class PrivateLists extends Component {
           }
         }
       }
-    })
-  }
+    });
+  };
 
   deleteItem = itemId => {
     this.props.deleteListHandle(itemId);
@@ -91,41 +91,53 @@ class PrivateLists extends Component {
     return (
       <MenuProvider>
         <SafeAreaView style={{ flex: 1 }}>
-          <View>
-            <FlatList
-              data={this.props.lists}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => this.selectList(item)}>
-                  <View style={styles.listItemContainer}>
-                    <Text style={styles.listItem}>{item.name}</Text>
-                    <View style={styles.listMore}>
-                      <Menu>
-                        <MenuTrigger style={styles.optionMoreIcon}>
-                          <Icon name={Platform.OS === "ios" ? "ios-more" : "md-more"} size={30} color="#eeeeee" />
-                        </MenuTrigger>
-                        <MenuOptions>
-                          <MenuOption onSelect={() => this.listNameHandler(item)}>
-                            <Text style={styles.optionMore}>
-                              Переименовать
-                            </Text>
-                          </MenuOption>
-                          <MenuOption onSelect={() => this.deleteItem(item.id)}>
-                            <Text style={styles.optionMore}>Удалить</Text>
-                          </MenuOption>
-                        </MenuOptions>
-                      </Menu>
+          <ImageBackground source={background} style={styles.background}>
+            <View>
+              <FlatList
+                data={this.props.lists}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => this.selectList(item)}>
+                    <View style={styles.listItemContainer}>
+                      <Text style={styles.listItem}>{item.name}</Text>
+                      <View style={styles.listMore}>
+                        <Menu>
+                          <MenuTrigger style={styles.optionMoreIcon}>
+                            <Icon
+                              name={
+                                Platform.OS === "ios" ? "ios-more" : "md-more"
+                              }
+                              size={30}
+                              color="#eeeeee"
+                            />
+                          </MenuTrigger>
+                          <MenuOptions>
+                            <MenuOption
+                              onSelect={() => this.listNameHandler(item)}
+                            >
+                              <Text style={styles.optionMore}>
+                                Переименовать
+                              </Text>
+                            </MenuOption>
+                            <MenuOption
+                              onSelect={() => this.deleteItem(item.id)}
+                            >
+                              <Text style={styles.optionMore}>Удалить</Text>
+                            </MenuOption>
+                          </MenuOptions>
+                        </Menu>
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-          <View style={styles.addButtonView}>
-            <TouchableOpacity onPress={() => this.listNameHandler()}>
-              <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
-          </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+            <View style={styles.addButtonView}>
+              <TouchableOpacity onPress={() => this.listNameHandler()}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
         </SafeAreaView>
       </MenuProvider>
     );
@@ -146,6 +158,9 @@ const mapDispatchToProps = dispatch => {
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1
+  },
   listItemContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -162,7 +177,7 @@ const styles = StyleSheet.create({
   },
   listItem: {
     fontSize: 20,
-    color: '#695A46'
+    color: "#695A46"
   },
   listMore: {
     width: 15
