@@ -31,7 +31,7 @@ class PrivateLists extends Component {
   }
 
   componentDidMount() {
-    console.log("mount");
+    console.log(this.props.lists,"mount");
     this.props.onGetLists();
   }
 

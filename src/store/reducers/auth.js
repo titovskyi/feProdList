@@ -1,20 +1,32 @@
-import { AUTH_USER } from '../actions/actionTypes';
+import { AUTH_USER, CHANGE_REG_LOGIN, LOGIN_USER } from "../actions/actionTypes";
 
 const initialState = {
-  users: []
+  user: {
+    authanticated: false,
+    signUpPage: false
+  }
 };
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case AUTH_USER: 
-    console.log(action.authData, 'reducer');
+    case CHANGE_REG_LOGIN:
       return {
         ...state,
-        users: action.authData
-      }
-    default: 
+        user: { ...state.user, signUpPage: !state.user.signUpPage }
+      };
+    case AUTH_USER:
+      return {
+        ...state,
+        user: { ...action.authData, authanticated: true, signUpPage: false }
+      };
+    case LOGIN_USER:
+      return {
+        ...state,
+        user: { ...action.token, authanticated: true }
+      };
+    default:
       return state;
   }
-}
+};
 
 export default reducer;

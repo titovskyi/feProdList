@@ -7,4 +7,4 @@ export {
   deleteProductFromList
 } from "./products";
 
-export { authUser } from "./auth";
+export { tryAuth, changeRegLogin, loginUser } from "./auth";
