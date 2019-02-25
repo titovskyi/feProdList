@@ -12,3 +12,9 @@ export const REMOVE_PRODUCT = "REMOVE_PRODUCT";
 
 // USERS
 export const AUTH_USER = "AUTH_USER";
+export const CHANGE_REG_LOGIN = 'CHANGE_REG_LOGIN';
+export const LOGIN_USER = 'LOGIN_USER';
+
+// ERRORS
+export const AUTH_ERROR = 'AUTH_ERROR';
+export const CLEAN_ERRORS ='CLEAN_ERRORS';

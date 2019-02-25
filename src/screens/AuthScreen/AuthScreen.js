@@ -13,14 +13,14 @@ import {
 
 import background from "../../assets/sideDrawerImage.jpg";
 import { goToMainApp } from "../navigation";
-import {connect} from 'react-redux';
-import { authUser } from '../../store/actions/index';
+import { connect } from "react-redux";
+import { tryAuth, changeRegLogin, loginUser } from "../../store/actions/index";
 import validation from "../../utility/validation";
 import Icon from "react-native-vector-icons/Ionicons";
 
 class AuthScreen extends Component {
   state = {
-    signUpPage: false,
+    user: '',
     controls: {
       login: {
         value: "",
@@ -58,9 +58,8 @@ class AuthScreen extends Component {
   };
 
   sighUpLoginHandler = () => {
-    this.setState({
-      signUpPage: !this.state.signUpPage
-    });
+    console.log(this.props.user, 'state');
+    this.props.onChangeRegistration();
   };
 
   backToApp = () => {
@@ -114,17 +113,34 @@ class AuthScreen extends Component {
   };
 
   loginHandler = () => {
-    console.log('sss');
     const authData = {
       login: this.state.controls.login.value,
       email: this.state.controls.email.value,
       password: this.state.controls.password.value
     };
-    this.props.onLogin(authData);
-    console.log(this.props.users, 'users');
-  }
+    this.props.user.signUpPage ? this.props.onSignup(authData) : this.props.onLogin(authData);
+    console.log(this.props.errors.message, 'sssssssss');
+  };
 
   render() {
+    const singButton = this.props.user.signUpPage ? (<Button
+      onPress={() => this.loginHandler()}
+      disabled={
+        !this.state.controls.email.valid ||
+        !this.state.controls.login.valid ||
+        !this.state.controls.password.valid ||
+        !this.state.controls.passwordConfirm.valid
+      }
+      title={"Создать аккаунт"}
+    />) : ((<Button
+      onPress={() => this.loginHandler()}
+      disabled={
+        !this.state.controls.email.valid ||
+        !this.state.controls.password.valid
+      }
+      title={"Войти"}
+    />))
+
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <ImageBackground source={background} style={styles.background}>
@@ -145,7 +161,8 @@ class AuthScreen extends Component {
               </TouchableOpacity>
             </View>
             <View style={styles.formContainer}>
-              {this.state.signUpPage ? (
+              {this.props.errors.data ? (<Text>{this.props.errors.data[0].msg}</Text>) : null}
+              {this.props.user.signUpPage ? (
                 <TextInput
                   placeholder="Ваш логин"
                   onChangeText={val => this.updateInputState("login", val)}
@@ -175,7 +192,7 @@ class AuthScreen extends Component {
                 placeholder="Ваш пароль"
                 style={[
                   styles.input,
-                  this.state.signUpPage ? null : { marginBottom: 20 },
+                  this.props.user.signUpPage ? null : { marginBottom: 20 },
                   !this.state.controls.password.valid &&
                   this.state.controls.password.touched
                     ? styles.invalid
@@ -184,7 +201,7 @@ class AuthScreen extends Component {
                 onChangeText={val => this.updateInputState("password", val)}
                 value={this.state.controls.password.value}
               />
-              {this.state.signUpPage ? (
+              {this.props.user.signUpPage ? (
                 <TextInput
                   placeholder="Повторите Ваш пароль"
                   style={[
@@ -202,10 +219,7 @@ class AuthScreen extends Component {
                 />
               ) : null}
               <View style={styles.buttonContainer}>
-                <Button
-                  onPress={() => this.loginHandler()}
-                  title={this.state.signUpPage ? "Создать аккаунт" : "Войти"}
-                />
+                {singButton}
               </View>
             </View>
             <TouchableOpacity
@@ -213,7 +227,7 @@ class AuthScreen extends Component {
               style={styles.registration}
             >
               <Text style={{ color: "#ffffff", fontWeight: "bold" }}>
-                {this.state.signUpPage ? "Войти в аккаунт" : "Регистрация"}
+                {this.props.user.signUpPage ? "Войти в аккаунт" : "Регистрация"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -268,14 +282,21 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
   return {
-    users: state.users.users
+    user: state.auth.user,
+    errors: state.errors.errors
   };
 };
 
-mapDispatchToProps = dispatch => {
-  return {
-    onLogin: authData => dispatch(authUser(authData))
-  }
-}
 
-export default connect(null, mapDispatchToProps)(AuthScreen);
+const mapDispatchToProps = dispatch => {
+  return {
+    onSignup: authData => dispatch(tryAuth(authData)),
+    onLogin: loginData => dispatch(loginUser(loginData)),
+    onChangeRegistration: () => dispatch(changeRegLogin())
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(AuthScreen);

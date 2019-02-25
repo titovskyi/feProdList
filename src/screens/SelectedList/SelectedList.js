@@ -28,7 +28,6 @@ class SelectedList extends Component {
     this.state = {
       prodName: "",
       department: "",
-      products: [],
       sections: []
     };
   }
@@ -77,8 +76,18 @@ class SelectedList extends Component {
         }
       });
 
+      let sortedSections = section.sort((a, b) => {
+        if (a.title > b.title) {
+          return 1;
+        } else if (a.title < b.title) {
+          return -1;
+        } else if (a.title === b.title) {
+          return 0;
+        }
+      })
+
       return {
-        sections: section
+        sections: sortedSections
       };
     }
   }
@@ -105,10 +114,23 @@ class SelectedList extends Component {
     if (this.state.prodName) {
       const productName = {
         productName: this.state.prodName,
-        department: this.state.department || "Другое"
+        department: this.state.department || "another"
       };
-      const listProduct = { ...this.props.selectedList, ...productName };
-      this.props.onAddProduct(listProduct);
+      console.log(this.props.products, 'back');
+      console.log(this.state.prodName)
+
+      let productAdded = this.props.products.find((item) => item.name === this.state.prodName);
+
+      
+        if(!productAdded) {
+          const listProduct = { ...this.props.selectedList, ...productName };
+          this.props.onAddProduct(listProduct);
+        } else {
+          this.setState({
+            prodName: ""
+          });
+        }
+      
       this.setState({
         prodName: ""
       });
