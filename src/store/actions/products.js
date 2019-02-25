@@ -5,16 +5,21 @@ import {
   REMOVE_PRODUCT
 } from "./actionTypes";
 
-export const getProducts = listId => {
-  return dispatch => {
-    fetch("http://192.168.1.146:8080/products/")
+export const getProducts = () => {
+  return (dispatch, getState) => {
+    fetch("http://192.168.1.146:8080/products/", {
+      headers: {
+        Authorization: "Bearer " + getState().auth.user.token
+      }
+    })
       .catch(err => {
         alert("Something went wrong, sorry!");
         console.log("err");
       })
       .then(res => res.json())
       .then(resParsed => {
-        dispatch(setProducts(resParsed));
+        console.log(resParsed, 'allproductssdssdadasdas');
+        dispatch(setProducts(resParsed.products));
       });
   };
 };
@@ -27,11 +32,12 @@ export const setProducts = products => {
 };
 
 export const createProduct = product => {
-  return dispatch => {
+  return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/product/", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + getState().auth.user.token
       },
       body: JSON.stringify(product)
     })
@@ -41,6 +47,7 @@ export const createProduct = product => {
       })
       .then(res => res.json())
       .then(resParsed => {
+        console.log(resParsed, "parsed added Product");
         dispatch(addProduct(resParsed.product));
       });
   };
@@ -54,11 +61,12 @@ export const addProduct = product => {
 };
 
 export const changeProdState = prod => {
-  return dispatch => {
+  return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/product-state", {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + getState().auth.user.token
       },
       body: JSON.stringify(prod)
     })
@@ -81,16 +89,16 @@ export const setNewProdState = prod => {
 };
 
 export const deleteProductFromList = prod => {
-  return dispatch => {
+  return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/delete-list-product", {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + getState().auth.user.token
       },
       body: JSON.stringify(prod)
     })
       .catch(err => console.log(err))
-      // .then(res => res.json())
       .then(() => {
         console.log(prod, 'prod');
         dispatch(removeProductFromList(prod));

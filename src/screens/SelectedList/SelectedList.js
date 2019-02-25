@@ -41,35 +41,18 @@ class SelectedList extends Component {
       let needToBuy = nextProps.products.filter(
         item => item.listProduct.state === true
       );
-
       needToBuy.forEach(prod => {
         let sectionBought = section.find(
-          item => item.title === prod.department
+          item => item.title === prod.listProduct.department
         );
         if (!sectionBought) {
           section.push({
-            title: prod.department,
+            title: prod.listProduct.department,
             data: [prod]
           });
         } else {
           section.map(item => {
-            if (item.title === prod.department) {
-              item.data.push(prod);
-            }
-          });
-        }
-      });
-
-      bought.forEach(prod => {
-        let sectionBought = section.find(item => item.title === "Куплено");
-        if (!sectionBought) {
-          section.push({
-            title: "Куплено",
-            data: [prod]
-          });
-        } else {
-          section.map(item => {
-            if (item.title === "Куплено") {
+            if (item.title === prod.listProduct.department) {
               item.data.push(prod);
             }
           });
@@ -86,6 +69,22 @@ class SelectedList extends Component {
         }
       })
 
+      bought.forEach(prod => {
+        let sectionBought = section.find(item => item.title === "Куплено");
+        if (!sectionBought) {
+          sortedSections.push({
+            title: "Куплено",
+            data: [prod]
+          });
+        } else {
+          sortedSections.map(item => {
+            if (item.title === "Куплено") {
+              item.data.push(prod);
+            }
+          });
+        }
+      });
+      console.log(sortedSections, 'sssssss')
       return {
         sections: sortedSections
       };
@@ -118,18 +117,11 @@ class SelectedList extends Component {
       };
       console.log(this.props.products, 'back');
       console.log(this.state.prodName)
-
       let productAdded = this.props.products.find((item) => item.name === this.state.prodName);
-
-      
-        if(!productAdded) {
-          const listProduct = { ...this.props.selectedList, ...productName };
-          this.props.onAddProduct(listProduct);
-        } else {
-          this.setState({
-            prodName: ""
-          });
-        }
+      if(!productAdded) {
+        const listProduct = { ...this.props.selectedList, ...productName };
+        this.props.onAddProduct(listProduct);
+      }
       
       this.setState({
         prodName: ""
@@ -139,9 +131,9 @@ class SelectedList extends Component {
     return;
   };
 
-  deleteProductFromList = prodId => {
-    this.props.onDeleteProduct(prodId);
-    console.log(prodId);
+  deleteProductFromList = prod => {
+    this.props.onDeleteProduct(prod);
+    console.log(prod);
   };
 
   changeProdState = prod => {

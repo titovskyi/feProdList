@@ -12,7 +12,7 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import background from "../../assets/sideDrawerImage.jpg";
 import { connect } from "react-redux";
-import { getLists, deleteList } from "../../store/actions/index";
+import { getLists, deleteList, getProducts } from "../../store/actions/index";
 import { Navigation } from "react-native-navigation";
 
 import {
@@ -33,10 +33,12 @@ class PrivateLists extends Component {
   componentDidMount() {
     console.log(this.props.lists,"mount");
     this.props.onGetLists();
+    this.props.onGetProducts();
   }
 
   navigationButtonPressed = ({ buttonId }) => {
     if (buttonId === "toggleDrawer") {
+      console.log(this.props.allProducts, 'alluserproducts');
       Navigation.mergeOptions("SideDrawer", {
         sideMenu: {
           left: {
@@ -146,12 +148,14 @@ class PrivateLists extends Component {
 
 const mapStateToProps = state => {
   return {
-    lists: state.lists.lists
+    lists: state.lists.lists,
+    allProducts: state.products.products
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
+    onGetProducts: () => dispatch(getProducts()),
     onGetLists: () => dispatch(getLists()),
     deleteListHandle: listId => dispatch(deleteList(listId))
   };
