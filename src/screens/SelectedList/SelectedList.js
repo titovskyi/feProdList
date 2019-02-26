@@ -43,16 +43,16 @@ class SelectedList extends Component {
       );
       needToBuy.forEach(prod => {
         let sectionBought = section.find(
-          item => item.title === prod.listProduct.department
+          item => item.title === prod.department
         );
         if (!sectionBought) {
           section.push({
-            title: prod.listProduct.department,
+            title: prod.department,
             data: [prod]
           });
         } else {
           section.map(item => {
-            if (item.title === prod.listProduct.department) {
+            if (item.title === prod.department) {
               item.data.push(prod);
             }
           });
