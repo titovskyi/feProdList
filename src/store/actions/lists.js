@@ -4,7 +4,7 @@ export const getLists = () => {
   return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/lists", {
       headers: {
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       }
     })
       .catch(err => {
@@ -30,7 +30,7 @@ export const getList = (listId) => {
   return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/lists/" + listId, {
       headers: {
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       }
     })
       .catch(err => {
@@ -60,7 +60,7 @@ export const createList = listName => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       },
       body: JSON.stringify(addList)
     })
@@ -81,7 +81,7 @@ export const putList = list => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       },
       body: JSON.stringify(list)
     })
@@ -112,7 +112,7 @@ export const deleteList = listId => {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       },
       body: JSON.stringify(deleteList)
     })

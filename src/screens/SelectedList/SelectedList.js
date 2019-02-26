@@ -3,7 +3,6 @@ import {
   Text,
   View,
   StyleSheet,
-  FlatList,
   TextInput,
   TouchableOpacity,
   Platform,
@@ -14,12 +13,15 @@ import {
   getList,
   createProduct,
   changeProdState,
-  deleteProductFromList
+  deleteProductFromList,
+  addUserProduct,
+  changeProduct
 } from "../../store/actions/index";
 import { Dropdown } from "react-native-material-dropdown";
 import Icon from "react-native-vector-icons/Ionicons";
-import departments from '../../assets/departments';
+import departments from "../../assets/departments";
 import { Navigation } from "react-native-navigation";
+import Autocomplete from "react-native-autocomplete-input";
 
 class SelectedList extends Component {
   constructor(props) {
@@ -67,7 +69,7 @@ class SelectedList extends Component {
         } else if (a.title === b.title) {
           return 0;
         }
-      })
+      });
 
       bought.forEach(prod => {
         let sectionBought = section.find(item => item.title === "Куплено");
@@ -84,7 +86,7 @@ class SelectedList extends Component {
           });
         }
       });
-      console.log(sortedSections, 'sssssss')
+      console.log(sortedSections, "sssssss");
       return {
         sections: sortedSections
       };
@@ -110,19 +112,37 @@ class SelectedList extends Component {
   };
 
   addProduct = () => {
+    console.log(this.props.allProducts, "allproductslistchange");
     if (this.state.prodName) {
       const productName = {
         productName: this.state.prodName,
         department: this.state.department || "another"
       };
-      console.log(this.props.products, 'back');
-      console.log(this.state.prodName)
-      let productAdded = this.props.products.find((item) => item.name === this.state.prodName);
-      if(!productAdded) {
+
+      let changeAllProducts = this.props.allProducts.find(
+        item => item.name === this.state.prodName
+      );
+      if (changeAllProducts) {
+        const changedProd = {
+          ...changeAllProducts,
+          department: this.state.department
+        };
+        this.props.onChangeUserProducts(changedProd);
+      } else {
+        this.props.onAddUserProduct({
+          name: this.state.prodName,
+          department: this.state.department
+        });
+      }
+
+      let productAdded = this.props.products.find(
+        item => item.name === this.state.prodName
+      );
+      if (!productAdded) {
         const listProduct = { ...this.props.selectedList, ...productName };
         this.props.onAddProduct(listProduct);
       }
-      
+
       this.setState({
         prodName: ""
       });
@@ -141,6 +161,16 @@ class SelectedList extends Component {
     this.props.onChangeState(prod);
   };
 
+  findProduct(name) {
+    if (name === "") {
+      return [];
+    }
+
+    const { allProducts } = this.props;
+    const regex = new RegExp(`${name.trim()}`, "i");
+    return allProducts.filter(product => product.name.search(regex) >= 0);
+  }
+
   render() {
     const infoBlock =
       this.state.prodName.length >= 3 ? (
@@ -152,6 +182,7 @@ class SelectedList extends Component {
             fontSize={20}
             itemCount={6}
             style={styles.dropdown}
+            value={this.state.department}
           />
           <TextInput
             placeholder="Количество"
@@ -166,18 +197,46 @@ class SelectedList extends Component {
           />
         </View>
       ) : null;
+
+    const products = this.findProduct(this.state.prodName);
     return (
       <View style={styles.main}>
-        <View style={styles.inputNameContainer}>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Название продукта"
-            name="prodName"
-            onChangeText={prodName => this.setState({ prodName })}
-            value={this.state.prodName}
-          />
+        <View
+          style={[
+            styles.inputNameContainer,
+            this.state.prodName.length >= 3 ? null : { marginBottom: 15 }
+          ]}
+        >
+          <View style={styles.autocompleteContainer}>
+            <Autocomplete
+              style={[{ fontSize: 20 }]}
+              inputContainerStyle={styles.inputContainerStyle}
+              listContainerStyle={[styles.listContainerStyle]}
+              placeholder="Введите товар"
+              listStyle={styles.listStyle}
+              data={
+                products.find(item => this.state.prodName === item.name)
+                  ? []
+                  : products
+              }
+              defaultValue={this.state.prodName}
+              onChangeText={text => this.setState({ prodName: text })}
+              renderItem={item => (
+                <TouchableOpacity
+                  onPress={() =>
+                    this.setState({
+                      prodName: item.name,
+                      department: item.department
+                    })
+                  }
+                >
+                  <Text style={{ fontSize: 20, margin: 5 }}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
           <TouchableOpacity onPress={this.addProduct}>
-            <View>
+            <View style={{ marginTop: 5 }}>
               <Icon
                 name={
                   Platform.OS === "ios"
@@ -217,7 +276,9 @@ class SelectedList extends Component {
             </TouchableOpacity>
           )}
           renderSectionHeader={({ section: { title } }) => (
-            <Text style={[styles.productItemText, { fontWeight: "bold" }]}>{title}</Text>
+            <Text style={[styles.productItemText, { fontWeight: "bold" }]}>
+              {title}
+            </Text>
           )}
           sections={this.state.sections}
           keyExtractor={(item, index) => item + index}
@@ -233,13 +294,15 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    backgroundColor: "rgba(255, 237, 45, .5)"
+    backgroundColor: "#ffffff"
   },
   inputNameContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
-    marginTop: 10
+    marginTop: 10,
+    marginRight: 15,
+    marginLeft: 5
   },
   infoInputContainer: {
     marginBottom: 20
@@ -254,6 +317,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     paddingLeft: 15,
     color: "#695A46"
+  },
+  inputContainerStyle: {
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0
+  },
+  listStyle: {
+    marginLeft: 0,
+    marginRight: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0
   },
   productItem: {
     width: "90%",
@@ -276,6 +352,14 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     fontSize: 35,
     color: "red"
+  },
+  autocompleteContainer: {
+    flex: 1,
+    left: 0,
+    position: "absolute",
+    right: 60,
+    top: 0,
+    zIndex: 1
   }
 });
 
@@ -289,6 +373,8 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     onGetList: selectedList => dispatch(getList(selectedList.id)),
+    onChangeUserProducts: changedProd => dispatch(changeProduct(changedProd)),
+    onAddUserProduct: productName => dispatch(addUserProduct(productName)),
     onAddProduct: product => dispatch(createProduct(product)),
     onChangeState: prod => dispatch(changeProdState(prod)),
     onDeleteProduct: prodId => dispatch(deleteProductFromList(prodId))

@@ -2,14 +2,16 @@ import {
   SET_PRODUCTS,
   ADD_PRODUCT,
   CHANGE_PRODUCT_STATE,
-  REMOVE_PRODUCT
+  REMOVE_PRODUCT,
+  CHANGE_USER_PRODUCT,
+  ADD_USER_PRODUCT
 } from "./actionTypes";
 
 export const getProducts = () => {
   return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/products/", {
       headers: {
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       }
     })
       .catch(err => {
@@ -18,7 +20,6 @@ export const getProducts = () => {
       })
       .then(res => res.json())
       .then(resParsed => {
-        console.log(resParsed, 'allproductssdssdadasdas');
         dispatch(setProducts(resParsed.products));
       });
   };
@@ -31,13 +32,27 @@ export const setProducts = products => {
   };
 };
 
+export const changeProduct = product => {
+  return {
+    type: CHANGE_USER_PRODUCT,
+    product: product
+  }
+}
+
+export const addUserProduct = product => {
+  return {
+    type: ADD_USER_PRODUCT,
+    product: product
+  }
+}
+
 export const createProduct = product => {
   return (dispatch, getState) => {
     fetch("http://192.168.1.146:8080/product/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       },
       body: JSON.stringify(product)
     })
@@ -66,7 +81,7 @@ export const changeProdState = prod => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       },
       body: JSON.stringify(prod)
     })
@@ -94,7 +109,7 @@ export const deleteProductFromList = prod => {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + getState().auth.user.token
+        Authorization: "Bearer " + getState().auth.user.userToken
       },
       body: JSON.stringify(prod)
     })

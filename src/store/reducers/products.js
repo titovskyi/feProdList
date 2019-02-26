@@ -1,4 +1,4 @@
-import { SET_PRODUCTS, ADD_PRODUCT } from '../actions/actionTypes';
+import { SET_PRODUCTS, ADD_USER_PRODUCT, CHANGE_USER_PRODUCT } from '../actions/actionTypes';
 
 const initialState = {
   products: []
@@ -11,7 +11,18 @@ const reducer = (state = initialState, action) => {
         ...state,
         products: action.products
       }
-    case ADD_PRODUCT:
+    case CHANGE_USER_PRODUCT:
+      return {
+        ...state,
+        // products: { ...state.products, ...action.product }
+        products: state.products.map((item) => {
+          if(item.id === action.product.id) {
+            return action.product;
+          }
+          return item;
+        })
+      }
+    case ADD_USER_PRODUCT:
       return {
         ...state,
         products: state.products.concat(action.product)

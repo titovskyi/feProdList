@@ -6,7 +6,7 @@ import {
   ImageBackground,
   Platform,
   TouchableOpacity,
-  StatusBar
+  AsyncStorage
 } from "react-native";
 
 import Icon from "react-native-vector-icons/Ionicons";
@@ -16,12 +16,18 @@ import { SafeAreaView } from "react-native";
 
 export default class SideDrawer extends Component {
   authButtonHandler = () => {
-    goToAuth();
+    AsyncStorage.removeItem("token")
+      .then(() => {
+        goToAuth();
+      })
+      .catch(err => {
+        console.log(err);
+      });
   };
 
   render() {
     return (
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.sideDrawerContainer}>
           <ImageBackground source={background} style={styles.background}>
             <TouchableOpacity

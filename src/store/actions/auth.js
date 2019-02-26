@@ -5,7 +5,8 @@ import {
   AUTH_ERROR,
   CLEAN_ERRORS
 } from "./actionTypes";
-import { goToMainApp } from "../../screens/navigation";
+import { goToMainApp, goToAuth } from "../../screens/navigation";
+import { AsyncStorage } from "react-native";
 
 export const changeRegLogin = () => {
   return {
@@ -72,6 +73,31 @@ export const loginUser = loginData => {
       });
   };
 };
+
+export const checkUserToken = (token) => {
+  console.log(token);
+  return dispatch => {
+    fetch("http://192.168.1.146:8080/check-login", {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    })
+      .catch(err => {
+        console.log(err);
+      })
+      .then(res => res.json())
+      .then(resParsed => {
+        console.log(resParsed, 'tokenData');
+        if (resParsed.error) {
+          goToAuth();
+        } else {
+          dispatch(authUser(resParsed));
+          goToMainApp();
+        }
+      });
+  }
+}
 
 export const stateLoginUser = token => {
   return {

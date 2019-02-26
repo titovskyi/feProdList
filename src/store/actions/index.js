@@ -4,7 +4,9 @@ export {
   getProducts,
   createProduct,
   changeProdState,
-  deleteProductFromList
+  deleteProductFromList,
+  changeProduct,
+  addUserProduct
 } from "./products";
 
-export { tryAuth, changeRegLogin, loginUser } from "./auth";
+export { tryAuth, changeRegLogin, loginUser, checkUserToken } from "./auth";

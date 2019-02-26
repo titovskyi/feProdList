@@ -12,5 +12,5 @@ export function registerScreens() {
   Navigation.registerComponentWithRedux('SelectedList', () => require("./SelectedList/SelectedList").default, Provider, store);
   Navigation.registerComponent("SideDrawer", () => require('./SideDrawer/SideDrawer').default);
   Navigation.registerComponentWithRedux("AuthScreen", () => require('./AuthScreen/AuthScreen').default, Provider, store);
-  Navigation.registerComponent("Initialization", () => require('./Initialization/Initialization').default);
+  Navigation.registerComponentWithRedux("Initialization", () => require('./Initialization/Initialization').default, Provider, store);
 }
