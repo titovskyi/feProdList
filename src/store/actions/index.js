@@ -9,4 +9,6 @@ export {
   addUserProduct
 } from "./products";
 
-export { tryAuth, changeRegLogin, loginUser, checkUserToken } from "./auth";
+export { tryAuth, loginUser, checkUserToken } from "./auth";
+
+export { getFriends, createFriend } from './friends';

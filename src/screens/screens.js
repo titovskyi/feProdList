@@ -10,7 +10,8 @@ export function registerScreens() {
   Navigation.registerComponentWithRedux("PrivateListsScreen", () => require('./PrivateLists/PrivateLists').default, Provider, store);
   Navigation.registerComponentWithRedux('SetListName', () => require('./SetListName/SetListName').default, Provider, store);
   Navigation.registerComponentWithRedux('SelectedList', () => require("./SelectedList/SelectedList").default, Provider, store);
-  Navigation.registerComponent("SideDrawer", () => require('./SideDrawer/SideDrawer').default);
   Navigation.registerComponentWithRedux("AuthScreen", () => require('./AuthScreen/AuthScreen').default, Provider, store);
   Navigation.registerComponentWithRedux("Initialization", () => require('./Initialization/Initialization').default, Provider, store);
+  Navigation.registerComponentWithRedux("ShareList", () => require('./ShareList/ShareList').default, Provider, store);
+  Navigation.registerComponent("SideDrawer", () => require('./SideDrawer/SideDrawer').default);
 }

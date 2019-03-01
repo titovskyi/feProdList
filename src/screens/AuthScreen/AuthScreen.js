@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import {
-  AsyncStorage,
   TextInput,
   View,
   Button,
@@ -9,19 +8,23 @@ import {
   Text,
   ImageBackground,
   StyleSheet,
-  SafeAreaView
+  SafeAreaView,
+  ActivityIndicator
 } from "react-native";
 
 import background from "../../assets/sideDrawerImage.jpg";
 import { goToMainApp } from "../navigation";
 import { connect } from "react-redux";
-import { tryAuth, changeRegLogin, loginUser } from "../../store/actions/index";
+import { tryAuth, loginUser } from "../../store/actions/index";
 import validation from "../../utility/validation";
 import Icon from "react-native-vector-icons/Ionicons";
 
 class AuthScreen extends Component {
   state = {
-    user: '',
+    signUpPage: false,
+    loading: false,
+    error: {},
+    user: "",
     controls: {
       login: {
         value: "",
@@ -59,8 +62,9 @@ class AuthScreen extends Component {
   };
 
   sighUpLoginHandler = () => {
-    console.log(this.props.user, 'state');
-    this.props.onChangeRegistration();
+    this.setState({
+      signUpPage: !this.state.signUpPage
+    });
   };
 
   backToApp = () => {
@@ -119,28 +123,70 @@ class AuthScreen extends Component {
       email: this.state.controls.email.value,
       password: this.state.controls.password.value
     };
-    this.props.user.signUpPage ? this.props.onSignup(authData) : this.props.onLogin(authData);
-    console.log(this.props.errors.message, 'sssssssss');
+    this.setState({
+      loading: true,
+      error: {}
+    });
+    this.state.signUpPage
+      ? this.props
+          .onSignup(authData)
+          .then(() => {
+            this.setState({
+              loading: false,
+              signUpPage: false
+            });
+          })
+          .catch(err => {
+            this.setState({
+              loading: false,
+              error: err
+            });
+          })
+      : this.props.onLogin(authData).catch(err => {
+          this.setState({
+            loading: false,
+            error: err
+          });
+        });
   };
 
   render() {
-    const singButton = this.props.user.signUpPage ? (<Button
-      onPress={() => this.loginHandler()}
-      disabled={
-        !this.state.controls.email.valid ||
-        !this.state.controls.login.valid ||
-        !this.state.controls.password.valid ||
-        !this.state.controls.passwordConfirm.valid
-      }
-      title={"Создать аккаунт"}
-    />) : ((<Button
-      onPress={() => this.loginHandler()}
-      disabled={
-        !this.state.controls.email.valid ||
-        !this.state.controls.password.valid
-      }
-      title={"Войти"}
-    />))
+    const singButton = this.state.signUpPage ? (
+      <Button
+        onPress={() => this.loginHandler()}
+        disabled={
+          !this.state.controls.email.valid ||
+          !this.state.controls.login.valid ||
+          !this.state.controls.password.valid ||
+          !this.state.controls.passwordConfirm.valid
+        }
+        title={"Создать аккаунт"}
+      />
+    ) : (
+      <Button
+        onPress={() => this.loginHandler()}
+        disabled={
+          !this.state.controls.email.valid ||
+          !this.state.controls.password.valid
+        }
+        title={"Войти"}
+      />
+    );
+
+    if (this.state.loading) {
+      return (
+        <SafeAreaView style={{ flex: 1 }}>
+          <ImageBackground source={background} style={styles.background}>
+            <ActivityIndicator
+              animating={true}
+              style={styles.indicator}
+              size="large"
+              color="#186B88"
+            />
+          </ImageBackground>
+        </SafeAreaView>
+      );
+    }
 
     return (
       <SafeAreaView style={{ flex: 1 }}>
@@ -162,8 +208,13 @@ class AuthScreen extends Component {
               </TouchableOpacity>
             </View>
             <View style={styles.formContainer}>
-              {this.props.errors.data ? (<Text>{this.props.errors.data[0].msg}</Text>) : null}
-              {this.props.user.signUpPage ? (
+              {this.state.error.error ? (
+                <Text style={styles.errors}>
+                  {this.state.error.data[0].msg}
+                </Text>
+              ) : null}
+
+              {this.state.signUpPage ? (
                 <TextInput
                   placeholder="Ваш логин"
                   onChangeText={val => this.updateInputState("login", val)}
@@ -193,7 +244,7 @@ class AuthScreen extends Component {
                 placeholder="Ваш пароль"
                 style={[
                   styles.input,
-                  this.props.user.signUpPage ? null : { marginBottom: 20 },
+                  this.state.signUpPage ? null : { marginBottom: 20 },
                   !this.state.controls.password.valid &&
                   this.state.controls.password.touched
                     ? styles.invalid
@@ -202,7 +253,7 @@ class AuthScreen extends Component {
                 onChangeText={val => this.updateInputState("password", val)}
                 value={this.state.controls.password.value}
               />
-              {this.props.user.signUpPage ? (
+              {this.state.signUpPage ? (
                 <TextInput
                   placeholder="Повторите Ваш пароль"
                   style={[
@@ -219,16 +270,14 @@ class AuthScreen extends Component {
                   value={this.state.controls.passwordConfirm.value}
                 />
               ) : null}
-              <View style={styles.buttonContainer}>
-                {singButton}
-              </View>
+              <View style={styles.buttonContainer}>{singButton}</View>
             </View>
             <TouchableOpacity
               onPress={this.sighUpLoginHandler}
               style={styles.registration}
             >
               <Text style={{ color: "#ffffff", fontWeight: "bold" }}>
-                {this.props.user.signUpPage ? "Войти в аккаунт" : "Регистрация"}
+                {this.state.signUpPage ? "Войти в аккаунт" : "Регистрация"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -278,26 +327,32 @@ const styles = StyleSheet.create({
   invalid: {
     backgroundColor: "#f9c0c0",
     borderColor: "red"
+  },
+  indicator: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 80
+  },
+  errors: {
+    color: "red",
+    backgroundColor: "white",
+    padding: 5,
+    marginBottom: 5,
+    borderRadius: 10,
+    width: "80%",
+    textAlign: "center"
   }
 });
-
-const mapStateToProps = state => {
-  return {
-    user: state.auth.user,
-    errors: state.errors.errors
-  };
-};
-
 
 const mapDispatchToProps = dispatch => {
   return {
     onSignup: authData => dispatch(tryAuth(authData)),
-    onLogin: loginData => dispatch(loginUser(loginData)),
-    onChangeRegistration: () => dispatch(changeRegLogin())
+    onLogin: loginData => dispatch(loginUser(loginData))
   };
 };
 
 export default connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps
 )(AuthScreen);

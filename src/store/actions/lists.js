@@ -1,20 +1,19 @@
 import { SET_LISTS, SET_LIST, REMOVE_LIST, UPDATE_LIST } from "./actionTypes";
 
 export const getLists = () => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/lists", {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/lists", {
       headers: {
         Authorization: "Bearer " + getState().auth.user.userToken
       }
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then(res => res.json())
       .then(resParsed => {
-        console.log(resParsed, 'getuserlists');
         dispatch(setLists(resParsed.lists));
+        return Promise.resolve();
       });
   };
 };
@@ -27,19 +26,19 @@ export const setLists = lists => {
 };
 
 export const getList = (listId) => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/lists/" + listId, {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/lists/" + listId, {
       headers: {
         Authorization: "Bearer " + getState().auth.user.userToken
       }
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then(res => res.json())
       .then(resParsed => {
         dispatch(setList(resParsed.products));
+        return Promise.resolve( );
       });
   }
 }
@@ -52,11 +51,11 @@ export const setList = products => {
 }
 
 export const createList = listName => {
-  return (dispatch, getState) => {
+  return async(dispatch, getState) => {
     const addList = {
       listName: listName
     };
-    fetch("http://192.168.1.146:8080/list", {
+    await fetch("http://192.168.1.146:8080/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -65,19 +64,17 @@ export const createList = listName => {
       body: JSON.stringify(addList)
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then((res) => {
-        console.log(res);
         dispatch(getLists());
       });
   };
 };
 
 export const putList = list => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/update-list", {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/update-list", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -86,8 +83,7 @@ export const putList = list => {
       body: JSON.stringify(list)
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then(() => {
         dispatch(updateList(list));
@@ -103,12 +99,12 @@ export const updateList = list => {
 };
 
 export const deleteList = listId => {
-  return (dispatch, getState) => {
+  return async(dispatch, getState) => {
     const deleteList = {
       deleteListId: listId
     };
 
-    fetch("http://192.168.1.146:8080/delete-list", {
+    await fetch("http://192.168.1.146:8080/delete-list", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -117,11 +113,11 @@ export const deleteList = listId => {
       body: JSON.stringify(deleteList)
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then(() => {
         dispatch(removeList(listId));
+        return Promise.resolve();
       });
   };
 };

@@ -8,19 +8,19 @@ import {
 } from "./actionTypes";
 
 export const getProducts = () => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/products/", {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/products/", {
       headers: {
         Authorization: "Bearer " + getState().auth.user.userToken
       }
     })
       .catch(err => {
-        alert("Something went wrong, sorry!");
-        console.log("err");
+        return Promise.reject(err);
       })
       .then(res => res.json())
       .then(resParsed => {
         dispatch(setProducts(resParsed.products));
+        return Promise.resolve();
       });
   };
 };
@@ -47,8 +47,8 @@ export const addUserProduct = product => {
 }
 
 export const createProduct = product => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/product/", {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/product/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,12 +57,10 @@ export const createProduct = product => {
       body: JSON.stringify(product)
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then(res => res.json())
       .then(resParsed => {
-        console.log(resParsed, "parsed added Product");
         dispatch(addProduct(resParsed.product));
       });
   };
@@ -76,8 +74,8 @@ export const addProduct = product => {
 };
 
 export const changeProdState = prod => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/product-state", {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/product-state", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -86,8 +84,7 @@ export const changeProdState = prod => {
       body: JSON.stringify(prod)
     })
       .catch(err => {
-        console.log(err);
-        alert("Проблемы с сервером, попробуйте позже");
+        return Promise.reject(err);
       })
       .then(res => res.json())
       .then(resParsed => {
@@ -104,8 +101,8 @@ export const setNewProdState = prod => {
 };
 
 export const deleteProductFromList = prod => {
-  return (dispatch, getState) => {
-    fetch("http://192.168.1.146:8080/delete-list-product", {
+  return async(dispatch, getState) => {
+    await fetch("http://192.168.1.146:8080/delete-list-product", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -113,16 +110,16 @@ export const deleteProductFromList = prod => {
       },
       body: JSON.stringify(prod)
     })
-      .catch(err => console.log(err))
+      .catch(err => {
+        return Promise.reject(err);
+      })
       .then(() => {
-        console.log(prod, 'prod');
         dispatch(removeProductFromList(prod));
       });
   };
 };
 
 export const removeProductFromList = product => {
-  console.log(product, 'delete');
   return {
     type: REMOVE_PRODUCT,
     product: product

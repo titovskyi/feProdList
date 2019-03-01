@@ -1,47 +1,40 @@
 import React, { Component } from "react";
 import {
-  Text,
-  View,
   SafeAreaView,
   ImageBackground,
   StyleSheet,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from "react-native";
-import { goToMainApp, goToAuth } from "../navigation";
+import { goToAuth } from "../navigation";
 import background from "../../assets/sideDrawerImage.jpg";
-import { checkUserToken } from '../../store/actions/index';
-import { connect } from 'react-redux';
+import { checkUserToken } from "../../store/actions/index";
+import { connect } from "react-redux";
 class Initialization extends Component {
+  state = {
+    loading: true
+  };
+
   componentDidMount() {
-    AsyncStorage.getItem('token').then(token => {
-      console.log(token);
-      if(!token) {
+    AsyncStorage.getItem("token").then(token => {
+      if (!token) {
         goToAuth();
       } else {
         this.props.onCheckLogin(token);
       }
-    })
-    
-  }
-
-  getUserToken = async() => {
-    let userToken = '';
-    try {
-      userToken = await AsyncStorage.getItem('token') || 'none';;
-    } catch (error) {
-      // Error retrieving data
-      console.log(error.message);
-    }
-    console.log(userToken)
+    });
   }
 
   render() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <ImageBackground source={background} style={styles.background}>
-          <View>
-            <Text> textInComponent </Text>
-          </View>
+          <ActivityIndicator
+            animating={true}
+            style={styles.indicator}
+            size="large"
+            color="#186B88"
+          />
         </ImageBackground>
       </SafeAreaView>
     );
@@ -51,13 +44,22 @@ class Initialization extends Component {
 const styles = StyleSheet.create({
   background: {
     flex: 1
+  },
+  indicator: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 80
   }
 });
 
 mapDispatchToProps = dispatch => {
   return {
     onCheckLogin: token => dispatch(checkUserToken(token))
-  }
-}
+  };
+};
 
-export default connect(null, mapDispatchToProps)(Initialization);
+export default connect(
+  null,
+  mapDispatchToProps
+)(Initialization);

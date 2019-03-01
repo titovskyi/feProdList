@@ -8,12 +8,12 @@ import {
   StyleSheet,
   Platform,
   ImageBackground,
-  AsyncStorage
+  ActivityIndicator
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import background from "../../assets/sideDrawerImage.jpg";
 import { connect } from "react-redux";
-import { getLists, deleteList, getProducts } from "../../store/actions/index";
+import { getLists, deleteList } from "../../store/actions/index";
 import { Navigation } from "react-native-navigation";
 
 import {
@@ -27,19 +27,31 @@ import {
 class PrivateLists extends Component {
   constructor(props) {
     super(props);
-
+    this.state = {
+      loading: true,
+      error: {}
+    };
     Navigation.events().bindComponent(this);
   }
 
   componentDidMount() {
-    console.log(this.props.lists,"mount");
-    this.props.onGetLists();
-    this.props.onGetProducts();
+    this.props
+      .onGetLists()
+      .then(() => {
+        this.setState({
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({
+          loading: false
+        });
+        alert("Проблемы с сервером, попробуйте позже");
+      });
   }
 
   navigationButtonPressed = ({ buttonId }) => {
     if (buttonId === "toggleDrawer") {
-      console.log(this.props.allProducts, 'alluserproducts');
       Navigation.mergeOptions("SideDrawer", {
         sideMenu: {
           left: {
@@ -49,7 +61,7 @@ class PrivateLists extends Component {
       });
     }
   };
-  
+
   selectList = selectedList => {
     Navigation.push(this.props.componentId, {
       component: {
@@ -61,6 +73,24 @@ class PrivateLists extends Component {
           topBar: {
             title: {
               text: selectedList.name
+            }
+          }
+        }
+      }
+    });
+  };
+
+  addUserToList = selectedList => {
+    Navigation.push(this.props.componentId, {
+      component: {
+        name: "ShareList",
+        passProps: {
+          selectedList: selectedList
+        },
+        options: {
+          topBar: {
+            title: {
+              text: "Поделиться списком"
             }
           }
         }
@@ -87,10 +117,40 @@ class PrivateLists extends Component {
   };
 
   deleteItem = itemId => {
-    this.props.deleteListHandle(itemId);
+    this.setState({
+      loading: true
+    })
+    this.props
+      .deleteListHandle(itemId)
+      .then(() => {
+        this.setState({
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({
+          loading: false
+        });
+        alert("Проблемы с сервером, попробуйте позже");
+      });
   };
 
   render() {
+    if (this.state.loading) {
+      return (
+        <SafeAreaView style={{ flex: 1 }}>
+          <ImageBackground source={background} style={styles.background}>
+            <ActivityIndicator
+              animating={true}
+              style={styles.indicator}
+              size="large"
+              color="#186B88"
+            />
+          </ImageBackground>
+        </SafeAreaView>
+      );
+    }
+
     return (
       <MenuProvider>
         <SafeAreaView style={{ flex: 1 }}>
@@ -115,6 +175,13 @@ class PrivateLists extends Component {
                             />
                           </MenuTrigger>
                           <MenuOptions>
+                            <MenuOption
+                              onSelect={() => this.addUserToList(item)}
+                            >
+                              <Text style={styles.optionMore}>
+                                Добавить пользователя
+                              </Text>
+                            </MenuOption>
                             <MenuOption
                               onSelect={() => this.listNameHandler(item)}
                             >
@@ -149,14 +216,12 @@ class PrivateLists extends Component {
 
 const mapStateToProps = state => {
   return {
-    lists: state.lists.lists,
-    allProducts: state.products.products
+    lists: state.lists.lists
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    onGetProducts: () => dispatch(getProducts()),
     onGetLists: () => dispatch(getLists()),
     deleteListHandle: listId => dispatch(deleteList(listId))
   };
@@ -210,7 +275,13 @@ const styles = StyleSheet.create({
     width: 20,
     backgroundColor: "#ffffff",
     alignItems: "center"
-  }
+  },
+  indicator: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 80
+  },
 });
 
 export default connect(

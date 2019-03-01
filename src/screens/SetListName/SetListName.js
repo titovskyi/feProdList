@@ -1,28 +1,34 @@
 import React, { Component } from "react";
-import { Text, View, StyleSheet, TextInput, Button, Keyboard } from "react-native";
-import { createList, putList } from '../../store/actions/index';
+import {
+  Text,
+  View,
+  StyleSheet,
+  TextInput,
+  Button,
+  Keyboard
+} from "react-native";
+import { createList, putList } from "../../store/actions/index";
 import { connect } from "react-redux";
 import { Navigation } from "react-native-navigation";
 
 class SetListName extends Component {
   state = {
+    loading: true,
     listId: this.props.selectedList ? this.props.selectedList.id : "",
     listName: this.props.selectedList ? this.props.selectedList.name : ""
   };
 
-  constructor(props) {
-    super(props);
-    this.inputChangeHandle = this.inputChangeHandle.bind(this);
-  }
-
   componentDidMount() {
     Navigation.events().bindComponent(this);
+    this.setState({
+      loading: false
+    });
   }
 
-  inputChangeHandle = (event) => {
+  inputChangeHandle = event => {
     this.setState({
       listName: event
-    })
+    });
   };
 
   navigationButtonPressed = ({ buttonId }) => {
@@ -38,10 +44,25 @@ class SetListName extends Component {
   };
 
   submitListName = () => {
+    this.setState({
+      loading: true
+    });
     Keyboard.dismiss();
-    this.props.selectedList ? this.props.onPutList(this.state) : this.props.onPostList(this.state.listName);
+    this.props.selectedList
+      ? this.props
+          .onPutList(this.state)
+          .catch(err => {
+            this.setState({ loading: false });
+            alert("Проблемы с сервером, попробуйте позже");
+          })
+      : this.props
+          .onPostList(this.state.listName)
+          .catch(err => {
+            this.setState({ loading: false });
+            alert("Проблемы с сервером, попробуйте позже");
+          });
     Navigation.pop(this.props.componentId);
-  }
+  };
 
   render() {
     return (
@@ -69,8 +90,8 @@ class SetListName extends Component {
 
 const mapDispatchToProps = dispatch => {
   return {
-    onPostList: (listName) => dispatch(createList(listName)),
-    onPutList: (list) => dispatch(putList(list))
+    onPostList: listName => dispatch(createList(listName)),
+    onPutList: list => dispatch(putList(list))
   };
 };
 
@@ -105,4 +126,7 @@ const styles = StyleSheet.create({
   }
 });
 
-export default connect(null, mapDispatchToProps)(SetListName);
+export default connect(
+  null,
+  mapDispatchToProps
+)(SetListName);

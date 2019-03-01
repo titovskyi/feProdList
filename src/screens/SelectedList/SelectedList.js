@@ -6,7 +6,9 @@ import {
   TextInput,
   TouchableOpacity,
   Platform,
-  SectionList
+  SectionList,
+  ActivityIndicator,
+  SafeAreaView
 } from "react-native";
 import { connect } from "react-redux";
 import {
@@ -15,19 +17,23 @@ import {
   changeProdState,
   deleteProductFromList,
   addUserProduct,
-  changeProduct
+  changeProduct,
+  getProducts
 } from "../../store/actions/index";
 import { Dropdown } from "react-native-material-dropdown";
 import Icon from "react-native-vector-icons/Ionicons";
 import departments from "../../assets/departments";
 import { Navigation } from "react-native-navigation";
 import Autocomplete from "react-native-autocomplete-input";
+import background from "../../assets/sideDrawerImage.jpg";
 
 class SelectedList extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      loading: true,
+      error: {},
       prodName: "",
       department: "",
       sections: []
@@ -86,7 +92,6 @@ class SelectedList extends Component {
           });
         }
       });
-      console.log(sortedSections, "sssssss");
       return {
         sections: sortedSections
       };
@@ -95,8 +100,32 @@ class SelectedList extends Component {
 
   componentDidMount() {
     Navigation.events().bindComponent(this);
-    this.props.onGetList(this.props.selectedList);
-    console.log(departments);
+    this.props
+      .onGetList(this.props.selectedList)
+      .then(() => {
+        this.setState({
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({
+          loading: false
+        });
+        alert("Проблемы с сервером, попробуйте позже");
+      });
+    this.props
+      .onGetProducts()
+      .then(() => {
+        this.setState({
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({
+          loading: false
+        });
+        alert("Проблемы с сервером, попробуйте позже");
+      });
   }
 
   navigationButtonPressed = ({ buttonId }) => {
@@ -112,7 +141,6 @@ class SelectedList extends Component {
   };
 
   addProduct = () => {
-    console.log(this.props.allProducts, "allproductslistchange");
     if (this.state.prodName) {
       const productName = {
         productName: this.state.prodName,
@@ -140,11 +168,16 @@ class SelectedList extends Component {
       );
       if (!productAdded) {
         const listProduct = { ...this.props.selectedList, ...productName };
-        this.props.onAddProduct(listProduct);
+        this.props
+          .onAddProduct(listProduct)
+          .catch(err => {
+            alert("Проблемы с сервером, попробуйте позже");
+          });
       }
 
       this.setState({
-        prodName: ""
+        prodName: "",
+        department: ""
       });
     }
 
@@ -152,13 +185,20 @@ class SelectedList extends Component {
   };
 
   deleteProductFromList = prod => {
-    this.props.onDeleteProduct(prod);
-    console.log(prod);
+    this.props
+      .onDeleteProduct(prod)
+      .catch(err => {
+        alert("Проблемы с сервером, попробуйте позже");
+      });
   };
 
   changeProdState = prod => {
     prod.listProduct.state = !prod.listProduct.state;
-    this.props.onChangeState(prod);
+    this.props
+      .onChangeState(prod)
+      .catch(err => {
+        alert("Проблемы с сервером, попробуйте позже");
+      });
   };
 
   findProduct(name) {
@@ -199,96 +239,116 @@ class SelectedList extends Component {
       ) : null;
 
     const products = this.findProduct(this.state.prodName);
-    return (
-      <View style={styles.main}>
-        <View
-          style={[
-            styles.inputNameContainer,
-            this.state.prodName.length >= 3 ? null : { marginBottom: 15 }
-          ]}
-        >
-          <View style={styles.autocompleteContainer}>
-            <Autocomplete
-              style={[{ fontSize: 20 }]}
-              inputContainerStyle={styles.inputContainerStyle}
-              listContainerStyle={[styles.listContainerStyle]}
-              placeholder="Введите товар"
-              listStyle={styles.listStyle}
-              data={
-                products.find(item => this.state.prodName === item.name)
-                  ? []
-                  : products
-              }
-              defaultValue={this.state.prodName}
-              onChangeText={text => this.setState({ prodName: text })}
-              renderItem={item => (
-                <TouchableOpacity
-                  onPress={() =>
-                    this.setState({
-                      prodName: item.name,
-                      department: item.department
-                    })
-                  }
-                >
-                  <Text style={{ fontSize: 20, margin: 5 }}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
+    if (this.state.loading) {
+      return (
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.background}>
+            <ActivityIndicator
+              animating={true}
+              style={styles.indicator}
+              size="large"
+              color="#186B88"
             />
           </View>
-          <TouchableOpacity onPress={this.addProduct}>
-            <View style={{ marginTop: 5 }}>
-              <Icon
-                name={
-                  Platform.OS === "ios"
-                    ? "ios-add-circle-outline"
-                    : "md-add-circle-outline"
+        </SafeAreaView>
+      );
+    }
+
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.main}>
+          <View
+            style={[
+              styles.inputNameContainer,
+              this.state.prodName.length >= 3 ? null : { marginBottom: 15 }
+            ]}
+          >
+            <View style={styles.autocompleteContainer}>
+              <Autocomplete
+                style={[{ fontSize: 20 }]}
+                inputContainerStyle={styles.inputContainerStyle}
+                listContainerStyle={[styles.listContainerStyle]}
+                placeholder="Введите товар"
+                listStyle={styles.listStyle}
+                data={
+                  products.find(item => this.state.prodName === item.name)
+                    ? []
+                    : products
                 }
-                size={40}
+                defaultValue={this.state.prodName}
+                onChangeText={text => this.setState({ prodName: text })}
+                renderItem={item => (
+                  <TouchableOpacity
+                    onPress={() =>
+                      this.setState({
+                        prodName: item.name,
+                        department: item.department
+                      })
+                    }
+                  >
+                    <Text style={{ fontSize: 20, margin: 5 }}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
               />
             </View>
-          </TouchableOpacity>
-        </View>
-        {infoBlock}
-        <SectionList
-          renderItem={({ item, index, section }) => (
-            <TouchableOpacity onPress={() => this.changeProdState(item)}>
-              <View style={styles.productItem}>
-                <Text
-                  key={index}
-                  style={[
-                    styles.productItemText,
-                    item.listProduct.state
-                      ? { textDecorationLine: "none" }
-                      : { textDecorationLine: "line-through" }
-                  ]}
-                >
-                  {item.name}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => this.deleteProductFromList(item)}
-                >
-                  <Icon
-                    name={Platform.OS === "ios" ? "ios-close" : "md-close"}
-                    style={styles.closeIcon}
-                  />
-                </TouchableOpacity>
+            <TouchableOpacity onPress={this.addProduct}>
+              <View style={{ marginTop: 5 }}>
+                <Icon
+                  name={
+                    Platform.OS === "ios"
+                      ? "ios-add-circle-outline"
+                      : "md-add-circle-outline"
+                  }
+                  size={40}
+                />
               </View>
             </TouchableOpacity>
-          )}
-          renderSectionHeader={({ section: { title } }) => (
-            <Text style={[styles.productItemText, { fontWeight: "bold" }]}>
-              {title}
-            </Text>
-          )}
-          sections={this.state.sections}
-          keyExtractor={(item, index) => item + index}
-        />
-      </View>
+          </View>
+          {infoBlock}
+          <SectionList
+            renderItem={({ item, index, section }) => (
+              <TouchableOpacity onPress={() => this.changeProdState(item)}>
+                <View style={styles.productItem}>
+                  <Text
+                    key={index}
+                    style={[
+                      styles.productItemText,
+                      item.listProduct.state
+                        ? { textDecorationLine: "none" }
+                        : { textDecorationLine: "line-through" }
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => this.deleteProductFromList(item)}
+                  >
+                    <Icon
+                      name={Platform.OS === "ios" ? "ios-close" : "md-close"}
+                      style={styles.closeIcon}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            )}
+            renderSectionHeader={({ section: { title } }) => (
+              <Text style={[styles.productItemText, { fontWeight: "bold" }]}>
+                {title}
+              </Text>
+            )}
+            sections={this.state.sections}
+            keyExtractor={(item, index) => item + index}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1
+  },
   dropdown: {
     paddingLeft: 15
   },
@@ -360,6 +420,12 @@ const styles = StyleSheet.create({
     right: 60,
     top: 0,
     zIndex: 1
+  },
+  indicator: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 80
   }
 });
 
@@ -377,7 +443,8 @@ const mapDispatchToProps = dispatch => {
     onAddUserProduct: productName => dispatch(addUserProduct(productName)),
     onAddProduct: product => dispatch(createProduct(product)),
     onChangeState: prod => dispatch(changeProdState(prod)),
-    onDeleteProduct: prodId => dispatch(deleteProductFromList(prodId))
+    onDeleteProduct: prodId => dispatch(deleteProductFromList(prodId)),
+    onGetProducts: () => dispatch(getProducts())
   };
 };
 
