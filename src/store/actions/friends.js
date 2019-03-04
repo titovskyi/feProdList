@@ -1,4 +1,4 @@
-import { SET_FRIENDS, ADD_FRIEND } from './actionTypes';
+import { SET_FRIENDS, ADD_FRIEND, REMOVE_FRIEND } from './actionTypes';
 
 export const getFriends = () => {
   return async(dispatch, getState) => {
@@ -54,3 +54,57 @@ export const addFriend = friend => {
     friend: friend
   };
 };
+
+export const shareList = (friendEmail, listId) => {
+  return async(dispatch, getState) => {
+    const shareList = {
+      friendEmail: friendEmail,
+      listId: listId
+    };
+    console.log(shareList, 'share');
+    return await fetch("http://192.168.1.146:8080/share-list", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getState().auth.user.userToken
+        },
+        body: JSON.stringify(shareList)
+      })
+      .catch(err => {
+        console.log(err, 'err');
+        return Promise.reject(err);
+      })
+      .then(res => res.json())
+      .then((resParsed) => {
+        console.log(resParsed, 'res');
+        return Promise.resolve(resParsed);
+      });
+  };
+};
+
+export const deleteFriend = (friendEmail) => {
+  console.log(friendEmail);
+  return async(dispatch, getState) => {
+    return await fetch("http://192.168.1.146:8080/delete-friend", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + getState().auth.user.userToken
+      },
+      body: JSON.stringify({email: friendEmail})
+    })
+    .catch(err => {
+      return Promise.reject(err);
+    })
+    .then(() => {
+      dispatch(removeFriend(friendEmail));
+    })
+  }
+}
+
+export const removeFriend = (friendEmail) => {
+  return {
+    type: REMOVE_FRIEND,
+    friendEmail: friendEmail
+  }
+}

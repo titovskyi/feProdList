@@ -4,7 +4,8 @@ import {
   ImageBackground,
   StyleSheet,
   AsyncStorage,
-  ActivityIndicator
+  ActivityIndicator,
+  PermissionsAndroid
 } from "react-native";
 import { goToAuth } from "../navigation";
 import background from "../../assets/sideDrawerImage.jpg";
@@ -16,13 +17,30 @@ class Initialization extends Component {
   };
 
   componentDidMount() {
-    AsyncStorage.getItem("token").then(token => {
+    AsyncStorage.getItem("token")
+    .then(token => {
+      this.requestMicrophonePermission();
+    })
+    .then(token => {
       if (!token) {
         goToAuth();
       } else {
         this.props.onCheckLogin(token);
       }
     });
+  }
+
+  requestMicrophonePermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      {
+        'title': 'Разрешите доступ к микрофону!',
+        'message': 'Для доступа к записи товаров голосом, разрешите доступ к микрофону.'
+      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   render() {

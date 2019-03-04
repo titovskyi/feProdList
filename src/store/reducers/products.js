@@ -23,7 +23,6 @@ const reducer = (state = initialState, action) => {
         })
       }
     case ADD_USER_PRODUCT:
-      
       return {
         ...state,
         products: state.products.concat(action.product)

@@ -38,9 +38,9 @@ export const getList = (listId) => {
       .then(res => res.json())
       .then(resParsed => {
         dispatch(setList(resParsed.products));
-        return Promise.resolve( );
+        return Promise.resolve();
       });
-  }
+  } 
 }
 
 export const setList = products => {

@@ -11,4 +11,4 @@ export {
 
 export { tryAuth, loginUser, checkUserToken } from "./auth";
 
-export { getFriends, createFriend } from './friends';
+export { getFriends, createFriend, shareList, deleteFriend } from './friends';

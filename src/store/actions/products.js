@@ -102,7 +102,7 @@ export const setNewProdState = prod => {
 
 export const deleteProductFromList = prod => {
   return async(dispatch, getState) => {
-    await fetch("http://192.168.1.146:8080/delete-list-product", {
+    return await fetch("http://192.168.1.146:8080/delete-list-product", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

@@ -18,3 +18,4 @@ export const AUTH_USER = "AUTH_USER";
 // FRIENDS
 export const SET_FRIENDS = "SET_FRIENDS";
 export const ADD_FRIEND = "ADD_FRIEND";
+export const REMOVE_FRIEND = "REMOVE_FRIEND";

@@ -8,7 +8,8 @@ import {
   Platform,
   SectionList,
   ActivityIndicator,
-  SafeAreaView
+  SafeAreaView,
+  PermissionsAndroid
 } from "react-native";
 import { connect } from "react-redux";
 import {
@@ -25,8 +26,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import departments from "../../assets/departments";
 import { Navigation } from "react-native-navigation";
 import Autocomplete from "react-native-autocomplete-input";
-import background from "../../assets/sideDrawerImage.jpg";
-
+import Voice from 'react-native-voice';
 class SelectedList extends Component {
   constructor(props) {
     super(props);
@@ -36,8 +36,15 @@ class SelectedList extends Component {
       error: {},
       prodName: "",
       department: "",
-      sections: []
+      sections: [],
+      recognized: '',
+      started: '',
+      results: []
     };
+
+    Voice.onSpeechStart = this.onSpeechStart.bind(this)
+    Voice.onSpeechRecognized = this.onSpeechRecognized.bind(this)
+    Voice.onSpeechResults = this.onSpeechResults.bind(this)
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -100,6 +107,7 @@ class SelectedList extends Component {
 
   componentDidMount() {
     Navigation.events().bindComponent(this);
+
     this.props
       .onGetList(this.props.selectedList)
       .then(() => {
@@ -127,7 +135,7 @@ class SelectedList extends Component {
         alert("Проблемы с сервером, попробуйте позже");
       });
   }
-
+  
   navigationButtonPressed = ({ buttonId }) => {
     if (buttonId === "toggleDrawer") {
       Navigation.mergeOptions("SideDrawer", {
@@ -168,11 +176,9 @@ class SelectedList extends Component {
       );
       if (!productAdded) {
         const listProduct = { ...this.props.selectedList, ...productName };
-        this.props
-          .onAddProduct(listProduct)
-          .catch(err => {
-            alert("Проблемы с сервером, попробуйте позже");
-          });
+        this.props.onAddProduct(listProduct).catch(err => {
+          alert("Проблемы с сервером, попробуйте позже");
+        });
       }
 
       this.setState({
@@ -185,20 +191,16 @@ class SelectedList extends Component {
   };
 
   deleteProductFromList = prod => {
-    this.props
-      .onDeleteProduct(prod)
-      .catch(err => {
-        alert("Проблемы с сервером, попробуйте позже");
-      });
+    this.props.onDeleteProduct(prod).catch(err => {
+      alert("Проблемы с сервером, попробуйте позже");
+    });
   };
 
   changeProdState = prod => {
     prod.listProduct.state = !prod.listProduct.state;
-    this.props
-      .onChangeState(prod)
-      .catch(err => {
-        alert("Проблемы с сервером, попробуйте позже");
-      });
+    this.props.onChangeState(prod).catch(err => {
+      alert("Проблемы с сервером, попробуйте позже");
+    });
   };
 
   findProduct(name) {
@@ -209,6 +211,36 @@ class SelectedList extends Component {
     const { allProducts } = this.props;
     const regex = new RegExp(`${name.trim()}`, "i");
     return allProducts.filter(product => product.name.search(regex) >= 0);
+  }
+
+  async _startRecognition(e) {
+    this.setState({
+      recognized: '',
+      started: '',
+      results: [],
+    });
+    try {
+      await Voice.start('en-US');
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  onSpeechStart(e) {
+    this.setState({
+      started: '√',
+    });
+  }
+  onSpeechRecognized(e) {
+    this.setState({
+      recognized: '√',
+    });
+  }
+  onSpeechResults(e) {
+    console.log(e.value);
+    this.setState({
+      results: e.value,
+    });
   }
 
   render() {
@@ -292,12 +324,23 @@ class SelectedList extends Component {
               />
             </View>
             <TouchableOpacity onPress={this.addProduct}>
-              <View style={{ marginTop: 5 }}>
+              <View style={{ marginTop: 5, flexDirection: "row" }}>
                 <Icon
+                  style={{ marginRight: 15 }}
                   name={
                     Platform.OS === "ios"
                       ? "ios-add-circle-outline"
                       : "md-add-circle-outline"
+                  }
+                  size={40}
+                />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={this._startRecognition.bind(this)}>
+              <View style={{ marginTop: 5, flexDirection: "row" }}>
+                <Icon
+                  name={
+                    Platform.OS === "ios" ? "ios-microphone" : "md-microphone"
                   }
                   size={40}
                 />
@@ -417,7 +460,7 @@ const styles = StyleSheet.create({
     flex: 1,
     left: 0,
     position: "absolute",
-    right: 60,
+    right: 80,
     top: 0,
     zIndex: 1
   },
